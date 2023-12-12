@@ -38,14 +38,17 @@ exports.voiceResponse = function voiceResponse(requestBody) {
 
   const dial = twiml.dial();
 
-  if (requestBody.From == MODERATOR) {
+
+  if (!requestBody.CallSid) {
     dial.conference('My conference', {
       startConferenceOnEnter: true,
       endConferenceOnExit: true,
+      muted: false,
     });
   } else {
     dial.conference('My conference', {
       startConferenceOnEnter: false,
+      muted: false,
     });
   }
 
