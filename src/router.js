@@ -3,8 +3,12 @@ const { tokenGenerator, voiceResponse } = require("./handler");
 
 const router = new Router();
 
-router.get("/token", (req, res) => {
+router.get("/token/moderator", (req, res) => {
   res.send(tokenGenerator());
+});
+
+router.get("/token/moderator", (req, res) => {
+  res.send(tokenGenerator(true));
 });
 
 router.post("/voice", (req, res) => {

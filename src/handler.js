@@ -7,8 +7,8 @@ const config = require('../config');
 
 var identity;
 
-exports.tokenGenerator = function tokenGenerator() {
-  identity = nameGenerator();
+exports.tokenGenerator = function tokenGenerator(forModerator) {
+  identity = forModerator ? 'Moderator' : nameGenerator();
 
   const accessToken = new AccessToken(
       config.accountSid,
@@ -29,7 +29,7 @@ exports.tokenGenerator = function tokenGenerator() {
   };
 };
 
-const MODERATOR = '+14122754751';
+const MODERATOR = 'Moderator';
 
 exports.voiceResponse = function voiceResponse(requestBody) {
   const toNumberOrClientName = requestBody.To;
