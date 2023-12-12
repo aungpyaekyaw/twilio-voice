@@ -38,7 +38,7 @@ exports.voiceResponse = function voiceResponse(requestBody) {
 
   const dial = twiml.dial();
 
-  if (request.body.From == MODERATOR) {
+  if (requestBody.From == MODERATOR) {
     dial.conference('My conference', {
       startConferenceOnEnter: true,
       endConferenceOnExit: true,
