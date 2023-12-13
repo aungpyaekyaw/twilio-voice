@@ -75,6 +75,7 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
 
   const dial = twiml.dial();
   const MODERATOR = 'Moderator';
+  console.log(`requestBody: `, requestBody);
 
   if (requestBody.From == `client:${MODERATOR}`) {
     dial.conference('My conference', {
@@ -82,7 +83,10 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
       endConferenceOnExit: true,
     });
   } else {
-    addUserToConference(requestBody.From, 'My conference', requestBody.From);
+    dial.conference('My conference', {
+      startConferenceOnEnter: false,
+    });
+    // addUserToConference(requestBody.From, 'My conference', requestBody.From);
   }
 
   return twiml.toString();
