@@ -94,7 +94,7 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
 
 exports.mergeCall = function mergeCall(requestBody) {
   console.log(`mergeCall: `, requestBody);
-  client.conferences.list({status: 'in-progress'})
+  client.conferences.list()
       .then((conferences) => {
         console.log(conferences);
         const cf = conferences.filter(
