@@ -48,7 +48,7 @@
     log("Requesting Access Token...");
 
     try {
-      const data = await $.getJSON("/token/moderator");
+      const data = await $.getJSON("/token");
       log("Got a token.");
       token = data.token;
       setClientNameUI(data.identity);
