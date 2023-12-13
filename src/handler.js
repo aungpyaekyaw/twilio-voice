@@ -76,7 +76,7 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
   const dial = twiml.dial();
   const MODERATOR = 'Moderator';
 
-  if (requestBody.From == MODERATOR) {
+  if (requestBody.From == `client:${MODERATOR}`) {
     dial.conference('My conference', {
       startConferenceOnEnter: true,
       endConferenceOnExit: true,
