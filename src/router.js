@@ -1,6 +1,7 @@
 const Router = require('express').Router;
 const {tokenGenerator, voiceResponse,
-  conferenceResponse} = require('./handler');
+  conferenceResponse,
+  mergeCall} = require('./handler');
 
 const router = new Router();
 
@@ -23,7 +24,7 @@ router.post('/conference', (req, res) => {
 });
 
 router.post('/merge', (req, res)=>{
-  res.send(req.body);
+  res.send(mergeCall(req.body));
 });
 
 module.exports = router;
