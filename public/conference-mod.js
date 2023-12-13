@@ -5,6 +5,7 @@ $(function () {
     const inputVolumeBar = document.getElementById("input-volume");
     const volumeIndicators = document.getElementById("volume-indicators");
     const callButton = document.getElementById("button-call");
+    const mergeButton = doucment.getElementById("button-merge")
     const outgoingCallHangupButton = document.getElementById("button-hangup-outgoing");
     const callControlsDiv = document.getElementById("call-controls");
     const audioSelectionDiv = document.getElementById("output-selection");
@@ -33,6 +34,10 @@ $(function () {
       e.preventDefault();
       makeOutgoingCall();
     };
+    mergeButton.onclick = (e) =>{
+      e.preventDefault()
+      mergeCall();
+    }
     getAudioDevicesButton.onclick = getAudioDevices;
     speakerDevices.addEventListener("change", updateOutputDevice);
     ringtoneDevices.addEventListener("change", updateRingtoneDevice);
@@ -127,6 +132,15 @@ $(function () {
       } else {
         log("Unable to make call.");
       }
+    }
+
+    async function mergeCall(){
+      const To = phoneNumberInput.value;
+      await $.post('/merge', {
+        To: To
+      },(data)=>{
+          console.log('merge call resp',data)
+      })
     }
   
     function updateUIAcceptedOutgoingCall(call) {

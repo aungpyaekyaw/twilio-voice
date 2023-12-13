@@ -4,6 +4,7 @@ const VoiceGrant = AccessToken.VoiceGrant;
 
 const nameGenerator = require('../name_generator');
 const config = require('../config');
+const e = require('express');
 const client = require('twilio')(config.accountSid, config.authToken);
 
 let identity;
@@ -90,6 +91,17 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
   }
 
   return twiml.toString();
+};
+
+exports.mergeCall = function mergeCall() {
+  client.conferences.list({status: 'in-progress'}).then((conferences) => {
+    const cf = conferences.filter((c)=>c.friendlyName == 'My conference')[0];
+    if (cf) {
+      return cf.sid;
+    } else {
+      return null;
+    }
+  });
 };
 
 
