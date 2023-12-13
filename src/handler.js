@@ -94,7 +94,8 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
 };
 
 exports.mergeCall = function mergeCall(requestBody) {
-  client.conferences.list({status: 'in-progress'})
+  console.log(`mergeCall: `, requestBody);
+  return client.conferences.list({status: 'in-progress'})
       .then((conferences) => {
         const cf = conferences.filter(
             (c)=>c.friendlyName == 'My conference')[0];
