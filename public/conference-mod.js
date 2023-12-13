@@ -5,7 +5,7 @@ $(function () {
     const inputVolumeBar = document.getElementById("input-volume");
     const volumeIndicators = document.getElementById("volume-indicators");
     const callButton = document.getElementById("button-call");
-    const mergeButton = doucment.getElementById("button-merge")
+    const mergeButton = document.getElementById("button-merge")
     const outgoingCallHangupButton = document.getElementById("button-hangup-outgoing");
     const callControlsDiv = document.getElementById("call-controls");
     const audioSelectionDiv = document.getElementById("output-selection");
