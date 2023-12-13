@@ -93,12 +93,13 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
   return twiml.toString();
 };
 
-exports.mergeCall = function mergeCall() {
-  return client.conferences.list({status: 'in-progress'})
+exports.mergeCall = function mergeCall(requestBody) {
+  client.conferences.list({status: 'in-progress'})
       .then((conferences) => {
         const cf = conferences.filter(
             (c)=>c.friendlyName == 'My conference')[0];
         console.log(cf);
+        addUserToConference(requestBody.To, cf.sid, requestBody.To);
         if (cf) {
           return cf.sid;
         } else {
@@ -116,7 +117,7 @@ exports.mergeCall = function mergeCall() {
  * @param {string} label - The label for the participant.
  */
 function addUserToConference(contact, conferenceName, label) {
-  console.log(`adding user to conference: ${contact}`);
+  console.log(`adding user ${contact} to conference: ${conferenceName}`);
   client.conferences(conferenceName)
       .participants.create({
         label: label,
