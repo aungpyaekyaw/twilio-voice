@@ -106,6 +106,8 @@ exports.mergeCall = function mergeCall(requestBody) {
         } else {
           return null;
         }
+      }).catch(e=>{
+        console.log(e);
       });
 };
 
