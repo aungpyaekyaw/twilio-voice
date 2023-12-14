@@ -94,16 +94,17 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
 
 exports.mergeCall = function mergeCall(requestBody) {
   console.log(`mergeCall: `, requestBody);
-  client.conferences.list()
+  client.conferences.list({status: 'in-progress'})
       .then((conferences) => {
         console.log(conferences);
         const cf = conferences.filter(
             (c)=>c.friendlyName == 'My conference')[0];
         console.log(cf);
-        addUserToConference(requestBody.To, cf.sid, requestBody.To);
         if (cf) {
+          addUserToConference(requestBody.To, cf.sid, requestBody.To);
           return cf.sid;
         } else {
+          console.log('no active conference');
           return null;
         }
       }).catch(e=>{
