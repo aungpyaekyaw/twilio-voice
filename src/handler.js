@@ -109,6 +109,7 @@ exports.mergeCall = function mergeCall(requestBody) {
       }).catch(e=>{
         console.log(e);
       });
+  return null;
 };
 
 
