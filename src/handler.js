@@ -84,7 +84,7 @@ exports.conferenceResponse = function conferenceResponse(requestBody) {
     });
   } else {
     dial.conference('My conference', {
-      startConferenceOnEnter: false,
+      startConferenceOnEnter: true,
     });
     // addUserToConference(requestBody.From, 'My conference', requestBody.From);
   }
