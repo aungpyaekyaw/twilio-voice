@@ -96,7 +96,6 @@ exports.mergeCall = function mergeCall(requestBody) {
   console.log(`mergeCall: `, requestBody);
   client.conferences.list({status: 'in-progress'})
       .then((conferences) => {
-        console.log(conferences);
         const cf = conferences.filter(
             (c)=>c.friendlyName == 'My conference')[0];
         console.log(cf);
@@ -125,8 +124,9 @@ function addUserToConference(contact, conferenceName, label) {
   client.conferences(conferenceName)
       .participants.create({
         label: label,
-        from: '_from',
+        from: '+14122754751',
         to: contact,
         startConferenceOnEnter: true,
-      });
+      }).then((participant) => console.log(participant.callSid))
+      .catch((e)=>console.log(e));
 }
