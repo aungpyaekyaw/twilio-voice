@@ -236,7 +236,7 @@
                     }
                 },
                 startWebsocket: function () {
-                    const url = `ws://localhost:3000/websockets?roomId=${this.identity}`
+                    const url = `wss://twilio.oneterrace-tech.site/websockets?roomId=${this.identity}`
                     console.log(`starting websocket connection to ${url}`)
                     this.wsConnection = new WebSocket(url);
 
