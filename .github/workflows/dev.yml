@@ -37,6 +37,7 @@ jobs:
           envkey_TWILIO_API_KEY: ${{ secrets.TWILIO_API_KEY }}
           envkey_TWILIO_API_SECRET: ${{ secrets.TWILIO_API_SECRET }}
           envkey_TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          envkey_PORT: 3001
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
