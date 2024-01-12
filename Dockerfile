@@ -17,4 +17,4 @@ RUN npm install
 CMD npm start
 
 # Exposing server port
-EXPOSE 3000
+EXPOSE 3001

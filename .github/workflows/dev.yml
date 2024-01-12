@@ -48,8 +48,8 @@ jobs:
         with:
           command: |
             sudo docker kill ${{ env.CONTAINER_NAME }} || true
-            docker system prune -a -f
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            sudo docker system prune -a -f
+            echo "${{ secrets.PAT }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-dev
             sudo docker run --restart=unless-stopped --name=${{ env.CONTAINER_NAME }} -p 3001:3001 -d ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-dev
           host: ${{ secrets.DEV_SERVER }}
