@@ -1,13 +1,20 @@
-FROM node:10
+# Fetching the minified node image on apline linux
+FROM node:slim
 
+# Declaring env
+ENV NODE_ENV production
+
+# Setting up the work directory
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-
-RUN npm install
-
+# Copying all the files in our project
 COPY . .
 
-EXPOSE 3000
+# Installing dependencies
+RUN npm install
 
-CMD [ "npm", "start" ]
+# Starting our application
+CMD npm start
+
+# Exposing server port
+EXPOSE 3000
