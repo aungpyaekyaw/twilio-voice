@@ -1,14 +1,21 @@
-const http = require("http");
-const path = require("path");
-const express = require("express");
-const bodyParser = require("body-parser");
+import http from 'http';
+import path from 'path';
+import express from 'express';
+import bodyParser from 'body-parser';
 
-const router = require("./src/router");
+import router from './src/router.js';
+import {websockets} from './src/websocket.js';
+import {fileURLToPath} from 'url';
+import {dirname} from 'path';
+import {broadcastConferenceInfo} from './src/handler.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Create Express webapp
 const app = express();
-app.use(express.static(path.join(__dirname, "public")));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.use(router);
@@ -16,7 +23,13 @@ app.use(router);
 // Create http server and run it
 const server = http.createServer(app);
 const port = process.env.PORT || 3000;
-
-server.listen(port, function () {
-  console.log("Express server running on *:" + port);
+const wss = websockets(server);
+app.post('/callback', (req, res)=>{
+  console.log('callback from twilio');
+  console.log(req.body);
+  //broadcastConferenceInfo(wss, req.body);
+  res.sendStatus(200);
+});
+server.listen(port, function() {
+  console.log('Express server running on *:' + port);
 });

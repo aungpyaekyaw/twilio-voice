@@ -1,14 +1,11 @@
 /* eslint-disable max-len */
 /* eslint-disable require-jsdoc */
-import {default as twilio} from 'twilio';
-import nameGenerator from '../name_generator.js';
+
 import config from '../config.js';
 import twilioClient from 'twilio';
-import {updateIdentityMap} from './coordinator.js';
+import {holdParticipant} from './handler.js';
 
 const client = twilioClient(config.accountSid, config.authToken);
-
-let identity;
 
 const availableConferences = ['My conference 2', 'My conference'];
 // @type {Array<{roomId: string, data: {type: string, action: string, from: string, to: string, conference: string}}>}
@@ -17,205 +14,6 @@ const identityMap = new Map();
 // @type {Array<{conferenceName: string, admin: string, users: Array<{userId: string}>}>}
 const activeRooms = [];
 
-
-export function tokenGenerator(mod) {
-  identity = mod ? 'Moderator' : nameGenerator();
-
-  const accessToken = new twilio.jwt.AccessToken(
-      config.accountSid,
-      config.apiKey,
-      config.apiSecret,
-  );
-  accessToken.identity = identity;
-
-  const grant = new twilio.jwt.AccessToken.VoiceGrant({
-    outgoingApplicationSid: config.twimlAppSid,
-    incomingAllow: true,
-  });
-  accessToken.addGrant(grant);
-
-  // Include identity and token in a JSON response
-  return {
-    identity: identity,
-    token: accessToken.toJwt(),
-  };
-};
-
-export function voiceResponse(requestBody) {
-  const toNumberOrClientName = requestBody.To;
-  const callerId = config.callerId;
-  const twiml = new twilio.twiml.VoiceResponse();
-
-  // If the request to the /voice endpoint is TO your Twilio Number,
-  // then it is an incoming call towards your Twilio.Device.
-  if (toNumberOrClientName == callerId) {
-    const dial = twiml.dial();
-
-    // This will connect the caller with your Twilio.Device/client
-    dial.client(identity);
-  } else if (requestBody.To) {
-    // This is an outgoing call
-
-    // set the callerId
-    const dial = twiml.dial({callerId});
-
-    // Check if the 'To' parameter is a Phone Number or Client Name
-    // in order to use the appropriate TwiML noun
-    const attr = isAValidPhoneNumber(toNumberOrClientName) ?
-      'number' :
-      'client';
-    dial[attr]({}, toNumberOrClientName);
-  } else {
-    twiml.say('Thanks for calling!');
-  }
-
-  return twiml.toString();
-};
-
-/**
- * Checks if the given value is valid as phone number
- * @param {Number|String} number
- * @return {Boolean}
- */
-function isAValidPhoneNumber(number) {
-  return /^[\d\+\-\(\) ]+$/.test(number);
-}
-
-export function conferenceResponse(requestBody) {
-  const twiml = new twilio.twiml.VoiceResponse();
-
-  const dial = twiml.dial();
-  const MODERATOR = 'Moderator';
-  console.log(`requestBody: `, requestBody);
-
-  const conference = requestBody.conference || 'My conference';
-
-  if (requestBody.From == `client:${MODERATOR}`) {
-    dial.conference(conference, {
-      startConferenceOnEnter: true,
-      endConferenceOnExit: true,
-      participantLabel: requestBody.From,
-    });
-  } else {
-    dial.conference(conference, {
-      startConferenceOnEnter: true,
-      participantLabel: requestBody.From,
-    });
-  }
-
-  // save the identity map
-  if (requestBody.Direction == 'inbound' && requestBody.Caller) {
-    updateIdentityMap(requestBody.Caller, requestBody.CallSid);
-  }
-
-  return twiml.toString();
-};
-
-export function mergeCall(requestBody) {
-  console.log(`mergeCall: `, requestBody);
-  client.conferences.list({status: 'in-progress'})
-      .then((conferences) => {
-        const cf = conferences.filter(
-            (c) => c.friendlyName == requestBody.conferenceId)[0];
-        console.log(cf);
-        if (cf) {
-          addUserToConference(requestBody.To, cf.sid, requestBody.To);
-          return cf.sid;
-        } else {
-          console.log('no active conference');
-          return null;
-        }
-      }).catch((e) => {
-        console.log(e);
-      });
-  return null;
-};
-
-export function mergeConferences(requestBody) {
-  console.log(`merging conferences:`, requestBody);
-  client.conferences(requestBody.awayConf).participants().update({
-    conferenceSid: 'My conference',
-  });
-  return twiml.toString();
-};
-
-export function holdParticipant(requestBody) {
-  console.log(`holding participant:`, requestBody);
-  client.conferences(requestBody.conference)
-      .participants(requestBody.participant)
-      .update({hold: requestBody.value})
-      .then((r)=>{
-        console.log(r);
-      }).catch((e)=>{
-        console.log(e);
-      });
-};
-
-
-export async function getMyCurrentConferenceInfo(requestBody) {
-  console.log(`returning current conference info`);
-  let list = [];
-  let participants = [];
-  list = await client.conferences.list({
-    friendlyName: 'My conference',
-    status: 'in-progress',
-  });
-  console.log(list);
-  if (list.length == 1) {
-    participants = await client.conferences(list[0].sid).participants.list();
-    return {
-      conference: list[0],
-      participants: participants,
-    };
-  }
-  return null;
-};
-
-
-/**
- * Adds a user to a conference.
- *
- * @param {string} contact - The contact to add to the conference.
- * @param {string} conferenceName - The name of the conference.
- * @param {string} label - The label for the participant.
- */
-function addUserToConference(contact, conferenceName, label) {
-  console.log(`adding user ${contact} to conference: ${conferenceName}`);
-  client.conferences(conferenceName)
-      .participants.create({
-        label: label,
-        from: '+14122754751',
-        to: contact,
-        startConferenceOnEnter: true,
-      }).then((participant) => console.log(participant.callSid))
-      .catch((e) => console.log(e));
-}
-export function broadcastConferenceInfo(wss, info) {
-  console.log('broadcasting conference info');
-  wss.clients.forEach((client) => {
-    activeAdmins.filter((a)=>a.data.adminId == client.roomId).map(async (a)=>{
-      // get the current conference info and send it to the admin
-      let list = [];
-      let participants = [];
-      list = await client.conferences.list({
-        friendlyName: 'My conference',
-        status: 'in-progress',
-      });
-      console.log(list);
-      if (list.length == 1) {
-        participants = await client.conferences(list[0].sid).participants.list();
-      }
-      sendWSMessage({
-        roomId: message.data.from,
-        data: {
-          action: 'conferenceInfoUpdate',
-          conference: list[0],
-          participants: participants,
-        },
-      }, wss);
-    });
-  });
-}
 /**
  * @param {object} message
  * @param {WebSocketServer} wss
@@ -287,7 +85,7 @@ export async function handleSystemMessage(message, wss) {
       }, wss);
     } else if (message.data.action == 'conferenceInfoUpdate') {
       // get the current conference info and send it to the admin
-      const activeRoom = activeRooms.filter((r)=>r.admin == message.data.adminId)[0];
+      const activeRoom = activeRooms.filter((r) => r.admin == message.data.adminId)[0];
       sendWSMessage({
         roomId: message.data.from,
         data: {
@@ -299,7 +97,7 @@ export async function handleSystemMessage(message, wss) {
       // hold the participant
       console.log('hold request data', message.data);
       // find the active room associated with the admin
-      const room = activeRooms.filter((r) => r.admin == message.data.to)[0];
+      const room = activeRooms.find((r) => r.admin == message.data.from);
       if (room) {
         const list = await client.conferences.list({
           friendlyName: room.conferenceName,
@@ -319,10 +117,7 @@ export async function handleSystemMessage(message, wss) {
       // admin reject the call from the user
       console.log('admin rejected the call', message.data.from);
       // find the current room and make it as available
-      const index = activeRooms.findIndex((r)=>r.admin == message.data.to);
-      if (index > -1) {
-        activeRooms[index].status = 'available';
-      }
+      clearTheRoom(message.data.to);
       sendWSMessage({
         roomId: message.data.from,
         data: {
@@ -331,10 +126,21 @@ export async function handleSystemMessage(message, wss) {
           to: message.data.to,
           type: 'coordinator',
         },
-      });
-      console.log('--------- active rooms -------');
-      console.log(activeRooms);
-      console.log('--------- end -------');
+      }, wss);
+    } else if (message.data.action == 'hangup') {
+      // admin hangup the call
+      console.log('admin hangup the call', message.data.from);
+      // find the current room and make it as available
+      clearTheRoom(message.data.to);
+      sendWSMessage({
+        roomId: message.data.from,
+        data: {
+          action: 'hangup',
+          from: message.data.from,
+          to: message.data.to,
+          type: 'coordinator',
+        },
+      }, wss);
     }
   } else if (message.data.type == 'user') {
     if (message.data.action == 'call') {
@@ -353,7 +159,7 @@ export async function handleSystemMessage(message, wss) {
           },
         }, wss);
         // find the admin room  and make it as busy
-        const index = activeRooms.findIndex((r)=>r.admin == admin);
+        const index = activeRooms.findIndex((r) => r.admin == admin);
         if (index > -1) {
           activeRooms[index].status = 'busy';
         }
@@ -406,11 +212,7 @@ export async function handleSystemMessage(message, wss) {
     } else if (message.data.action == 'reject') {
       // user reject the call from the admin
       console.log('admin rejected the call', message.data.from);
-      // find the current room and make it as available
-      const index = activeRooms.findIndex((r)=>r.admin == message.data.from);
-      if (index > -1) {
-        activeRooms[index].status = 'available';
-      }
+      clearTheRoom(message.data.from);
       sendWSMessage({
         roomId: message.data.from,
         data: {
@@ -420,9 +222,17 @@ export async function handleSystemMessage(message, wss) {
           type: 'coordinator',
         },
       });
-      console.log('--------- active rooms -------');
-      console.log(activeRooms);
-      console.log('--------- end -------');
+    } else if (message.data.action == 'hangup') {
+      sendWSMessage({
+        roomId: message.data.to,
+        data: {
+          action: 'hangup',
+          from: message.data.from,
+          to: message.data.to,
+          type: 'coordinator',
+        },
+      }, wss);
+      clearTheRoom(message.data.to);
     }
   }
 }
@@ -443,7 +253,7 @@ export function sendWSMessage(message, wss) {
 
 
 export function handleClosedWebSocketConnections(roomId) {
-  const room = activeRooms.findIndex((r)=>r.admin == roomId);
+  const room = activeRooms.findIndex((r) => r.admin == roomId);
   if (room > -1) {
     availableConferences.push(activeRooms[room].conferenceName);
     activeRooms.splice(room, 1);
@@ -453,4 +263,21 @@ export function handleClosedWebSocketConnections(roomId) {
     console.log(availableConferences);
     console.log('--------- end -------');
   }
+}
+
+export function updateIdentityMap(caller, callSid) {
+  identityMap.set( caller, callSid);
+  console.log(identityMap);
+}
+
+function clearTheRoom(adminId) {
+  console.log('Room clear for ', adminId);
+  const index = activeRooms.findIndex((r) => r.admin == adminId);
+  if (index > -1) {
+    activeRooms[index].status = 'available';
+    activeRooms[index].users = [];
+  }
+  console.log('--------- active rooms -------');
+  console.log(activeRooms);
+  console.log('--------- end -------');
 }

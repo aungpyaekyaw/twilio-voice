@@ -30,7 +30,18 @@
               >Enter a phone number or client name</label
             >
             <input id="phone-number" type="text" placeholder="+15552221234" />
+            <select name="conference" id="select-conference">
+              <option value="My conference">Conference 1</option>
+              <option value="My conference 2">Conference 2</option>
+            </select>
             <button id="button-call" type="submit">Call</button>
+            <button id="button-get-info">Get Info</button>
+            <button id="button-merge-conf">Merge Conferences</button>
+            <label for="participant"
+              >Enter participant id to perform an action</label
+            >
+            <input id="participant" type="text" placeholder="CAxxxxxxx" />
+            <button id="button-hold">Hold/Unhold</button>
           </form>
           <button id="button-hangup-outgoing" class="hide">Hang Up</button>
           <div id="incoming-call" class="hide">

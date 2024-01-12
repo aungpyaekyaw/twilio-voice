@@ -1,9 +1,13 @@
-const Router = require('express').Router;
-const {tokenGenerator, voiceResponse,
+/* eslint-disable new-cap */
+import express from 'express';
+import {tokenGenerator, voiceResponse,
   conferenceResponse,
-  mergeCall} = require('./handler');
+  mergeCall,
+  mergeConferences,
+  getMyCurrentConferenceInfo,
+  holdParticipant} from './handler.js';
 
-const router = new Router();
+const router = express.Router();
 
 router.get('/token', (req, res) => {
   res.send(tokenGenerator());
@@ -27,4 +31,17 @@ router.post('/merge', (req, res)=>{
   res.send(mergeCall(req.body));
 });
 
-module.exports = router;
+router.post('/merge-conferences', (req, res)=>{
+  res.send(mergeConferences(req.body));
+});
+
+
+router.get('/get-current-conference', async ( req, res)=>{
+  res.send(await getMyCurrentConferenceInfo());
+});
+
+router.post('/hold', (req, res) =>{
+  res.send(holdParticipant(req.body));
+});
+
+export default router;

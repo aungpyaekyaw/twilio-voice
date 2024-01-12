@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio Call</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="twilio.min.js"></script>
+
+</head>
+
+<body>
+    <div id="app">
+
+        <div class="p-4 m-4 row">
+            <div class="col">
+                <button class="btn btn-primary" id="startBtn" @click="init">Start the device</button>
+
+                <div class="py-4">
+                    Your ID -> {{identity}}
+                </div>
+
+                <div class="py-4 flex-column">
+                    <label>Ringtone Devices</label>
+                    <select class="form-select" id="ringtone-devices" multiple>
+                        <option v-for="(item,key) in ringtoneDevices" :value="item.id">
+                            {{item.label}}
+                        </option>
+                    </select>
+                    <label>Speaker Devices</label>
+                    <select class="form-select" id="speaker-devices" multiple>
+                        <option v-for="(item,key) in speakerDevices" :value="item.id">
+                            {{item.label}}
+                        </option>
+                    </select><br />
+                    <!-- <button class="btn btn-primary" id="get-devices">Seeing "Unknown" devices?</button> -->
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="flex flex-row align-center justify-center gap-x-2">
+                    <button class="btn btn-primary" @click="makeOutgoingCall">Call</button>
+                    <button class="btn btn-danger" @click="hangUp" v-show="call">Hangup</button>
+                </div>
+                <div v-if="incomingCallRinging" class="flex flex-col p-2 m-2">
+                    <p>Incoming call from {{ from }}</p>
+                    <div class="flex flex-row align-center justify-center gap-x-2">
+                        <button class="btn btn-success" @click="acceptCall">Accept</button>
+                        <button class="btn btn-danger" @click="rejectCall">Reject</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let vm = new Vue({
+            el: '#app',
+            data: {
+                token: null,
+                identity: '',
+                device: null,
+                call: null,
+                speakerDevices: [],
+                ringtoneDevices: [],
+                incomingCallRinging: false,
+                ringSound: new Audio('ring.mp3'),
+            },
+            methods: {
+                init: () => {
+                    vm.requestToken();
+                },
+                requestToken: async () => {
+                    console.log("Requesting Access Token...");
+                    console.log(vm)
+                    try {
+                        const resp = await fetch('/token')
+                        const data = await resp.json();
+                        console.log("Got a token.", data.token);
+                        vm.token = data.token;
+                        vm.identity = data.identity;
+                        vm.initDevice();
+                    } catch (err) {
+                        console.log(err);
+                        console.log("An error occurred. See your browser console for more information.");
+                    }
+
+                },
+                initDevice: () => {
+
+                    console.log("Initializing device");
+                    device = new Twilio.Device(vm.token, {
+                        logLevel: 1,
+                        // Set Opus as our preferred codec. Opus generally performs better, requiring less bandwidth and
+                        // providing better audio quality in restrained network conditions.
+                        codecPreferences: ["opus", "pcmu"],
+                    });
+                    vm.device = device;
+                    vm.addDeviceListeners(device);
+
+                    // Device must be registered in order to receive incoming calls
+                    device.register();
+                },
+                addDeviceListeners: (device) => {
+                    device.on("registered", function () {
+                        console.log("Twilio.Device Ready to make and receive calls!");
+                        //callControlsDiv.classList.remove("hide");
+                        vm.startWebsocket();
+                    });
+
+                    device.on("error", function (error) {
+                        console.log("Twilio.Device Error: " + error.message);
+                    });
+
+                    //device.on("incoming", handleIncomingCall);
+
+                    device.audio.on("deviceChange", vm.updateAllAudioDevices);
+
+                    // Show audio selection UI if it is supported by the browser.
+                    if (device.audio.isOutputSelectionSupported) {
+                        //audioSelectionDiv.classList.remove("hide");
+                    }
+                },
+                updateAllAudioDevices: () => {
+                    vm.updateDevices('speaker', vm.device.audio.speakerDevices.get());
+                    vm.updateDevices('ringtone', vm.device.audio.ringtoneDevices.get());
+                },
+                updateDevices: (type, selectedDevices) => {
+
+                    device.audio.availableOutputDevices.forEach(function (device, id) {
+                        var isActive = selectedDevices.size === 0 && id === "default";
+                        selectedDevices.forEach(function (device) {
+                            if (device.deviceId === id) {
+                                isActive = true;
+                            }
+                        });
+
+                        if (type == 'speaker') {
+                            vm.speakerDevices.push({ id: id, label: device.label, isActive: isActive });
+                        } else if (type == 'ringtone') {
+                            vm.ringtoneDevices.push({ id: id, label: device.label, isActive: isActive });
+                        }
+                    });
+                },
+                makeOutgoingCall: async () => {
+                    let params = {
+                        // get the phone number to call from the DOM
+
+                    };
+
+                    vm.wsSend({
+                        roomId: 'coordinator',
+                        data: {
+                            type: 'user',
+                            action: 'call',
+                            to: 'admin',
+                            from: vm.identity,
+                        }
+                    })
+
+                    if (device) {
+                        //console.log(`Attempting to call ${params.To} ...`);
+
+                        // Twilio.Device.connect() returns a Call object
+                        //const call = await device.connect({ params });
+                        //vm.call = call;
+
+                        // add listeners to the Call
+                        // "accepted" means the call has finished connecting and the state is now "open"
+                        //call.on("accept", updateUIAcceptedOutgoingCall);
+                        //call.on("disconnect", updateUIDisconnectedOutgoingCall);
+                        //call.on("cancel", updateUIDisconnectedOutgoingCall);
+
+                    } else {
+                        console.log("Unable to make call.");
+                    }
+                },
+                hangUp: () => {
+                    if (vm.call) {
+                        vm.call.disconnect();
+                        vm.wsSend({
+                            roomId: 'coordinator',
+                            data: {
+                                type: 'user',
+                                action: 'hangup',
+                                to: vm.from,
+                                from: vm.identity,
+                            }
+                        })
+                    }
+                },
+                startWebsocket: function () {
+                    const url = `ws://localhost:3000/websockets?roomId=${this.identity}`
+                    console.log(`starting websocket connection to ${url}`)
+                    this.wsConnection = new WebSocket(url);
+
+                    this.wsConnection.onmessage = function (e) {
+                        console.log(e);
+                        vm.handleWSMessage(e);
+                    }
+
+                    this.wsConnection.onopen = function (e) {
+                        console.log(e);
+                    }
+
+                   
+                },
+                wsSend: (message) => {
+                    vm.wsConnection.send(JSON.stringify({
+                        ...message
+                    }));
+                },
+                handleWSMessage: function (e) {
+                    const message = JSON.parse(e.data);
+                    console.log(message);
+                    if (message.data.action == 'incoming') {
+                       vm.handleIncomingCall(message);
+                    } else if (message.data.action == 'allowedToJoin') {
+                        vm.handleConferenceJoinApprove(message);
+                    } else if(message.data.action == 'rejected') {
+                        vm.handleRejectedCalled(message);
+                    } else if(message.data.action == 'hangup') {
+                        vm.handleHangup(message);
+                    }
+                },
+                handleConferenceJoinApprove: async function (message) {
+                    if (device) {
+                        let params = {
+                            // get the phone number to call from the DOM
+                            conference: message.data.conference
+                        };
+                        console.log(`Attempting to call ${params.To} ...`);
+
+                        // Twilio.Device.connect() returns a Call object
+                        const call = await device.connect({ params });
+                        vm.call = call;
+                        vm.from = message.data.to;
+
+                        // add listeners to the Call
+                        // "accepted" means the call has finished connecting and the state is now "open"
+                        //call.on("accept", updateUIAcceptedOutgoingCall);
+                        //call.on("disconnect", updateUIDisconnectedOutgoingCall);
+                        //call.on("cancel", updateUIDisconnectedOutgoingCall);
+
+
+                    } else {
+                        console.log("Unable to make call.");
+                    }
+                },
+                acceptCall: async () => {
+                    vm.incomingCallRinging = false;
+                    vm.ringSound.pause();
+                    vm.ringSound.currentTime = 0;
+                    vm.wsSend({
+                        roomId: 'coordinator',
+                        data: {
+                            type: 'user',
+                            action: 'accept',
+                            from: vm.from,
+                            to: vm.identity,
+                        }
+                    })
+                    let params = {
+                        // get the phone number to call from the DOM
+
+                    };
+
+                    if (device) {
+                        //console.log(`Attempting to call ${params.To} ...`);
+
+                        // Twilio.Device.connect() returns a Call object
+                        const call = await device.connect({ params });
+                        vm.call = call;
+
+                        // add listeners to the Call
+                        // "accepted" means the call has finished connecting and the state is now "open"
+                        //call.on("accept", updateUIAcceptedOutgoingCall);
+                        //call.on("disconnect", updateUIDisconnectedOutgoingCall);
+                        //call.on("cancel", updateUIDisconnectedOutgoingCall);
+
+                    } else {
+                        console.log("Unable to make call.");
+                    }
+                },
+                handleIncomingCall : function(message){
+                    console.log('incoming call from', message.data.from)
+                    vm.incomingCallRinging = true;
+                    vm.from = message.data.from;
+                    vm.ringSound.loop = true;
+                    vm.from = message.data.from;
+                    vm.ringSound.play();
+                },
+                rejectCall: async () => {
+                    vm.incomingCallRinging = false;
+                    vm.ringSound.pause();
+                    vm.ringSound.currentTime = 0;
+                    vm.wsSend({
+                        roomId: vm.from,
+                        data: {
+                            type: 'user',
+                            action: 'reject',
+                            from: vm.from,
+                            to: vm.identity,
+                        }
+                    })
+                    vm.wsSend({
+                        roomId: 'coordinator',
+                        data: {
+                            type: 'user',
+                            action: 'reject',
+                            from: vm.from,
+                            to: vm.identity
+                        }
+                    })
+                },
+                handleRejectedCalled: function(message){
+                    
+                },
+                handleHangup: function(message) {
+                    console.log('client hangup the call')
+                    if(vm.call){
+                        console.log('call disconnected.')
+                        vm.call.disconnect();
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

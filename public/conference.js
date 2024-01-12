@@ -1,3 +1,5 @@
+
+
 $(function () {
     const speakerDevices = document.getElementById("speaker-devices");
     const ringtoneDevices = document.getElementById("ringtone-devices");
@@ -5,6 +7,7 @@ $(function () {
     const inputVolumeBar = document.getElementById("input-volume");
     const volumeIndicators = document.getElementById("volume-indicators");
     const callButton = document.getElementById("button-call");
+    const mergeConfButton = document.getElementById("button-merge-conf");
     const outgoingCallHangupButton = document.getElementById("button-hangup-outgoing");
     const callControlsDiv = document.getElementById("call-controls");
     const audioSelectionDiv = document.getElementById("output-selection");
@@ -23,9 +26,17 @@ $(function () {
     const phoneNumberInput = document.getElementById("phone-number");
     const incomingPhoneNumberEl = document.getElementById("incoming-number");
     const startupButton = document.getElementById("startup-button");
+    const selectConference = document.getElementById("select-conference");
+    const getInfoButton = document.getElementById("button-get-info");
+    const holdButton = document.getElementById("button-hold");
+    const participantInput = document.getElementById("participant");
   
+    let identity;
     let device;
     let token;
+    let conference;
+    let conferenceInfo;
+    let holding = false;
   
     // Event Listeners
   
@@ -33,6 +44,20 @@ $(function () {
       e.preventDefault();
       makeOutgoingCall();
     };
+    mergeConfButton.onclick = (e) =>{
+      e.preventDefault()
+      mergeConferences();
+    }
+    getInfoButton.onclick = (e) =>{
+      e.preventDefault();
+      getMyCurrentConferenceInfo();
+    }
+
+    holdButton.onclick = (e) =>{
+      e.preventDefault();
+      handleHold();
+    }
+
     getAudioDevicesButton.onclick = getAudioDevices;
     speakerDevices.addEventListener("change", updateOutputDevice);
     ringtoneDevices.addEventListener("change", updateRingtoneDevice);
@@ -105,6 +130,7 @@ $(function () {
       var params = {
         // get the phone number to call from the DOM
         To: phoneNumberInput.value,
+        conference: selectConference.value, 
       };
   
       if (device) {
@@ -128,8 +154,30 @@ $(function () {
         log("Unable to make call.");
       }
     }
+
+    function getMyCurrentConferenceInfo(){
+      $.get('/get-current-conference', {
+        
+      },(data)=>{
+          console.log('get conference resp',data)
+          conferenceInfo = data;
+          participantInput.value = data.participants.filter(p=>p.label !== identity)[0].callSid;
+      })
+    }
+
+    function handleHold(){
+      $.post('/hold', {
+        conference: conferenceInfo.conference.sid,
+        participant: participantInput.value,
+        value: !holding
+      },(data)=>{
+          console.log('holding',data)
+          holding = !holding;
+      })
+    }
   
     function updateUIAcceptedOutgoingCall(call) {
+      console.log(call);
       log("Call in progress ...");
       callButton.disabled = true;
       outgoingCallHangupButton.classList.remove("hide");
@@ -218,6 +266,7 @@ $(function () {
     function setClientNameUI(clientName) {
       var div = document.getElementById("client-name");
       div.innerHTML = `Your client name: <strong>${clientName}</strong>`;
+      identity = clientName;
     }
   
     function resetIncomingCallUI() {
