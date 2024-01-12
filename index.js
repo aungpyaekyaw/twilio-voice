@@ -7,7 +7,7 @@ import router from './src/router.js';
 import {websockets} from './src/websocket.js';
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
-import {broadcastConferenceInfo} from './src/handler.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,7 +27,6 @@ const wss = websockets(server);
 app.post('/callback', (req, res)=>{
   console.log('callback from twilio');
   console.log(req.body);
-  //broadcastConferenceInfo(wss, req.body);
   res.sendStatus(200);
 });
 server.listen(port, function() {
