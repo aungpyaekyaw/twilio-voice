@@ -281,3 +281,29 @@ function clearTheRoom(adminId) {
   console.log(activeRooms);
   console.log('--------- end -------');
 }
+
+export function receiveCallFromIOS(wss, res) {
+  console.log('Receiving call from ios');
+  console.log(activeRooms);
+  const room = activeRooms.find((r) => r.conferenceName == 'My conference');
+  console.log(room);
+  if (room) {
+    room.users.push({
+      userId: 'iOS',
+    });
+    // send allow to join message to admin
+    sendWSMessage({
+      roomId: room.admin,
+      data: {
+        action: 'allowedToJoin',
+        conference: room.conferenceName,
+        from: 'ios',
+        to: room.admin,
+        type: 'coordinator',
+      },
+    }, wss);
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(400);
+  }
+}

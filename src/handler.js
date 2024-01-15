@@ -14,14 +14,6 @@ const __dirname = path.dirname(__filename);
 
 let identity;
 
-const availableConferences = ['My conference 2', 'My conference'];
-// @type {Array<{roomId: string, data: {type: string, action: string, from: string, to: string, conference: string}}>}
-const activeAdmins = [];
-const identityMap = new Map();
-// @type {Array<{conferenceName: string, admin: string, users: Array<{userId: string}>}>}
-const activeRooms = [];
-
-
 export function tokenGenerator(mod) {
   identity = mod ? 'Moderator' : nameGenerator();
 

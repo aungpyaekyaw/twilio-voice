@@ -7,6 +7,7 @@ import router from './src/router.js';
 import {websockets} from './src/websocket.js';
 import {fileURLToPath} from 'url';
 import {dirname} from 'path';
+import {receiveCallFromIOS} from './src/coordinator.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +29,9 @@ app.post('/callback', (req, res)=>{
   console.log('callback from twilio');
   console.log(req.body);
   res.sendStatus(200);
+});
+app.get('/call-admin', (req, res)=>{
+  receiveCallFromIOS(wss, res);
 });
 server.listen(port, function() {
   console.log('Express server running on *:' + port);
