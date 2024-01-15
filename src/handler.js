@@ -5,6 +5,7 @@ const VoiceGrant = AccessToken.VoiceGrant;
 const nameGenerator = require('../name_generator');
 const config = require('../config');
 const client = require('twilio')(config.accountSid, config.authToken);
+const apn = require('apn');
 
 let identity;
 
@@ -112,6 +113,45 @@ exports.mergeCall = function mergeCall(requestBody) {
   return null;
 };
 
+exports.sendVoipNotification = function sendVoipNotification(requestBody) {
+  var options = {
+    token: {
+      key: `${__dirname}/AuthKey_NB4J46P3Q4.p8`,
+      keyId: "NB4J46P3Q4",
+      teamId: "657V37PLVJ"
+    },
+    production: false
+  };
+  
+  var apnProvider = new apn.Provider({
+    cert: `${__dirname}/voip_jumpstg.pem`,
+    key: `${__dirname}/AuthKey_NB4J46P3Q4.pem`,
+    ...options
+  });
+
+  var note = new apn.Notification();
+
+  note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+  note.badge = 3;
+  note.sound = "ping.aiff";
+  note.alert = "You have a new call";
+  note.payload = {
+    "aps": { "content-available": 1 },
+    'callerName': "dog","roomName": "dog room"
+  };
+  note.topic = "link.jumpapp.psa.stg.voip";
+  note.priority = 10;
+  note.pushType = "alert";
+
+  console.log(requestBody.deviceToken)
+  apnProvider.send(note, requestBody.deviceToken)
+    .then( (result) => {
+      console.log(" Push send result: " + JSON.stringify(result))
+    })
+    .catch(error => {
+      console.log(error)
+    })
+}
 
 /**
  * Adds a user to a conference.

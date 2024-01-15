@@ -1,7 +1,8 @@
 const Router = require('express').Router;
 const {tokenGenerator, voiceResponse,
   conferenceResponse,
-  mergeCall} = require('./handler');
+  mergeCall,
+  sendVoipNotification} = require('./handler');
 
 const router = new Router();
 
@@ -26,5 +27,9 @@ router.post('/conference', (req, res) => {
 router.post('/merge', (req, res)=>{
   res.send(mergeCall(req.body));
 });
+
+router.post('/call-voip', (req, res) => {
+  res.send(sendVoipNotification(req.body))
+})
 
 module.exports = router;
