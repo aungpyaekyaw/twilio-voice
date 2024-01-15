@@ -177,7 +177,8 @@
                     vm.updateDevices('ringtone', vm.device.audio.ringtoneDevices.get());
                 },
                 updateDevices: (type, selectedDevices) => {
-
+                    vm.speakerDevices = [];
+                    vm.ringtoneDevices = [];
                     device.audio.availableOutputDevices.forEach(function (device, id) {
                         var isActive = selectedDevices.size === 0 && id === "default";
                         selectedDevices.forEach(function (device) {
