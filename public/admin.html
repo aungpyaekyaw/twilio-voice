@@ -57,7 +57,7 @@
                     </div>
                 </div>
 
-                <div>
+                <div  class="shadow-sm p-4">
                     <p>Enter a phone number to merge into this call</p>
                     <div class="flex flex-row p-2 m-2 gap-x-2">
                         <input class="form-control" type="text" class="form-control" v-model="mergeInput" />
@@ -173,12 +173,12 @@
                     }
                 },
                 updateAllAudioDevices: () => {
+                    vm.speakerDevices = [];
+                    vm.ringtoneDevices = [];
                     vm.updateDevices('speaker', vm.device.audio.speakerDevices.get());
                     vm.updateDevices('ringtone', vm.device.audio.ringtoneDevices.get());
                 },
                 updateDevices: (type, selectedDevices) => {
-                    vm.speakerDevices = [];
-                    vm.ringtoneDevices = [];
                     device.audio.availableOutputDevices.forEach(function (device, id) {
                         var isActive = selectedDevices.size === 0 && id === "default";
                         selectedDevices.forEach(function (device) {
