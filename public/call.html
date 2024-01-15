@@ -327,6 +327,7 @@
                     if(vm.call){
                         console.log('call disconnected.')
                         vm.call.disconnect();
+                        vm.call = null;
                     }
                 },
                 getDevices: async  function () {

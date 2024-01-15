@@ -57,7 +57,7 @@
                     </div>
                 </div>
 
-                <div  class="shadow-sm p-4">
+                <div class="shadow-sm p-4">
                     <p>Enter a phone number to merge into this call</p>
                     <div class="flex flex-row p-2 m-2 gap-x-2">
                         <input class="form-control" type="text" class="form-control" v-model="mergeInput" />
@@ -76,6 +76,15 @@
                                     }}</button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+
+                <div class="shadow-sm p-4">
+                    <p>call iOS device</p>
+                    <div class="flex flex-row p-2 m-2 gap-x-2">
+                        <input class="form-control" type="text" class="form-control" v-model="iosDeviceToken" />
+                        <button class="btn btn-success" @click="callIOS" v-show="identity">Call</button>
                     </div>
                 </div>
 
@@ -103,7 +112,7 @@
                 conferenceId: null,
                 participants: [],
                 conferenceInfoUpdateInterval: null,
-
+                iosDeviceToken: null,
             },
             created: function () {
 
@@ -237,6 +246,7 @@
                             }
                         })
                         vm.participants = []
+                        vm.call = null;
                     }
                 },
                 startWebsocket: function () {
@@ -428,10 +438,41 @@
                 handleHangup: function (message) {
                     vm.hangUp()
                 },
-                getDevices: async  function () {
+                getDevices: async function () {
                     console.log('getting devices');
                     await navigator.mediaDevices.getUserMedia({ audio: true });
                     this.updateAllAudioDevices();
+                },
+                callIOS: async function () {
+                    try {
+                        fetch('/call-ios-device', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                deviceToken: vm.iosDeviceToken,
+                            })
+                        }).then(async (resp) => {
+                            console.log(resp);
+                            if (device) {
+                                let params = {
+                                    // get the phone number to call from the DOM
+                                    conference: 'My Conference'
+                                };
+                                console.log(`Attempting to call ${params.To} ...`);
+
+                                // Twilio.Device.connect() returns a Call object
+                                const call = await device.connect({ params });
+                                vm.call = call;
+                            }
+                        }).then((data) => {
+                            console.log(data);
+                        })
+                    } catch (err) {
+                        console.log(err);
+                        console.log("An error occurred. See your browser console for more information.");
+                    }
                 }
 
             }

@@ -5,7 +5,8 @@ import {tokenGenerator, voiceResponse,
   mergeCall,
   mergeConferences,
   getMyCurrentConferenceInfo,
-  holdParticipant} from './handler.js';
+  holdParticipant,
+  sendVoipNotification} from './handler.js';
 
 const router = express.Router();
 
@@ -42,6 +43,10 @@ router.get('/get-current-conference', async ( req, res)=>{
 
 router.post('/hold', (req, res) =>{
   res.send(holdParticipant(req.body));
+});
+
+router.post('/call-ios-device', (req, res) =>{
+  res.send(sendVoipNotification(req.body));
 });
 
 export default router;

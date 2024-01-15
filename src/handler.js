@@ -5,8 +5,12 @@ import nameGenerator from '../name_generator.js';
 import config from '../config.js';
 import twilioClient from 'twilio';
 import {updateIdentityMap} from './coordinator.js';
-
+import apn from 'apn';
 const client = twilioClient(config.accountSid, config.authToken);
+import path from 'path';
+import {fileURLToPath} from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let identity;
 
@@ -190,4 +194,45 @@ function addUserToConference(contact, conferenceName, label) {
       }).then((participant) => console.log(participant.callSid))
       .catch((e) => console.log(e));
 }
+
+export function sendVoipNotification(requestBody) {
+  const options = {
+    token: {
+      key: `${__dirname}/AuthKey_NB4J46P3Q4.p8`,
+      keyId: 'NB4J46P3Q4',
+      teamId: '657V37PLVJ',
+    },
+    production: false,
+  };
+
+  const apnProvider = new apn.Provider({
+    cert: `${__dirname}/voip_jumpstg.pem`,
+    key: `${__dirname}/AuthKey_NB4J46P3Q4.pem`,
+    ...options,
+  });
+
+  const note = new apn.Notification();
+
+  note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+  note.badge = 3;
+  note.sound = 'ping.aiff';
+  note.alert = 'You have a new call';
+  note.payload = {
+    'aps': {'content-available': 1},
+    'callerName': 'dog', 'roomName': 'dog room',
+  };
+  note.topic = 'link.jumpapp.psa.stg.voip';
+  note.priority = 10;
+  note.pushType = 'alert';
+
+  console.log(requestBody.deviceToken);
+  apnProvider.send(note, requestBody.deviceToken)
+      .then( (result) => {
+        console.log(' Push send result: ' + JSON.stringify(result));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+};
+
 
