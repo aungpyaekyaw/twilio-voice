@@ -37,13 +37,13 @@
                             {{item.label}}
                         </option>
                     </select><br />
-                    <!-- <button class="btn btn-primary" id="get-devices">Seeing "Unknown" devices?</button> -->
+                    <button class="btn btn-primary" @click="getDevices">Seeing "Unknown" devices?</button>
                 </div>
             </div>
 
             <div class="col">
                 <div class="flex flex-row align-center justify-center gap-x-2">
-                    <button class="btn btn-primary" @click="makeOutgoingCall">Call</button>
+                    <button class="btn btn-primary" @click="makeOutgoingCall" v-show="identity">Call</button>
                     <button class="btn btn-danger" @click="hangUp" v-show="call">Hangup</button>
                 </div>
                 <div v-if="incomingCallRinging" class="flex flex-col p-2 m-2">
@@ -64,7 +64,7 @@
             el: '#app',
             data: {
                 token: null,
-                identity: '',
+                identity: null,
                 device: null,
                 call: null,
                 speakerDevices: [],
@@ -328,6 +328,11 @@
                         console.log('call disconnected.')
                         vm.call.disconnect();
                     }
+                },
+                getDevices: async  function () {
+                    console.log('getting devices');
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.updateAllAudioDevices();
                 }
             }
         });

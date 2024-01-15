@@ -37,7 +37,7 @@
                             {{item.label}}
                         </option>
                     </select><br />
-                    <!-- <button class="btn btn-primary" id="get-devices">Seeing "Unknown" devices?</button> -->
+                    <button class="btn btn-primary" @click="getDevices">Seeing "Unknown" devices?</button>
                 </div>
             </div>
 
@@ -46,7 +46,7 @@
                     <input class="form-control" type="text" class="form-control" v-model="toInput" />
                 </div>
                 <div class="p-2">
-                    <button class="btn btn-primary" @click="callUser">Call</button>
+                    <button class="btn btn-primary" @click="callUser" v-show="identity">Call</button>
                     <button class="btn btn-danger" v-show="call" @click="hangUp">Hangup</button>
                 </div>
                 <div v-if="incomingCallRinging" class="flex flex-col p-2 m-2 justify-center items-center">
@@ -58,9 +58,10 @@
                 </div>
 
                 <div>
+                    <p>Enter a phone number to merge into this call</p>
                     <div class="flex flex-row p-2 m-2 gap-x-2">
                         <input class="form-control" type="text" class="form-control" v-model="mergeInput" />
-                        <button class="btn btn-success" @click="mergeCall">Merge</button>
+                        <button class="btn btn-success" @click="mergeCall">Dial</button>
                     </div>
                 </div>
 
@@ -68,9 +69,11 @@
                     <div class="flex flex-col p-2 m-2 justify-center items-center">
                         <p>Participants</p>
                         <div class="flex flex-col p-2 m-2 justify-center items-center">
-                            <div class="flex flex-row p-2 justify-between gap-x-2 items-center" v-for="(item,key) in participants" :key="key">
+                            <div class="flex flex-row p-2 justify-between gap-x-2 items-center"
+                                v-for="(item,key) in participants" :key="key">
                                 <p>{{item.userId}}</p>
-                                <button class="btn btn-success" @click="holdUser(item)">{{item.hold ? 'Unhold' : 'Hold' }}</button>
+                                <button class="btn btn-success" @click="holdUser(item)">{{item.hold ? 'Unhold' : 'Hold'
+                                    }}</button>
                             </div>
                         </div>
                     </div>
@@ -100,7 +103,7 @@
                 conferenceId: null,
                 participants: [],
                 conferenceInfoUpdateInterval: null,
-            
+
             },
             created: function () {
 
@@ -278,7 +281,7 @@
                         vm.handleConferenceInfoUpdate(message);
                     } else if (message.data.action == 'conferenceNameUpdate') {
                         vm.handleConferenceNameUpdate(message);
-                    } else if(message.data.action == 'hangup') {
+                    } else if (message.data.action == 'hangup') {
                         vm.handleHangup(message);
                     }
                 },
@@ -295,7 +298,7 @@
                             to: vm.identity,
                         }
                     })
-                
+
                     let params = {
                         // get the phone number to call from the DOM
 
@@ -313,13 +316,13 @@
                         //call.on("accept", updateUIAcceptedOutgoingCall);
                         //call.on("disconnect", updateUIDisconnectedOutgoingCall);
                         //call.on("cancel", updateUIDisconnectedOutgoingCall);
-                        
+
 
                     } else {
                         console.log("Unable to make call.");
                     }
                 },
-                handleIncomingCall: function(message){
+                handleIncomingCall: function (message) {
                     console.log('incoming call from', message.data.from)
                     vm.incomingCallRinging = true;
                     vm.ringSound.loop = true;
@@ -381,8 +384,8 @@
                         }
                     })
                     const index = vm.participants.findIndex((u) => u.userId == user.userId);
-                    if(index > -1) {
-                        vm.participants.splice(index,1,{
+                    if (index > -1) {
+                        vm.participants.splice(index, 1, {
                             ...user,
                             hold: !user.hold,
                         })
@@ -410,7 +413,7 @@
                     }
                 },
                 handleConferenceInfoUpdate: async function (message) {
-                    message.data.room.users.map((u)=>{
+                    message.data.room.users.map((u) => {
                         vm.participants.push({
                             ...u,
                             hold: false,
@@ -421,8 +424,13 @@
                     console.log('conference name update', message.data.conference)
                     vm.conferenceId = message.data.conference;
                 },
-                handleHangup: function(message) {
+                handleHangup: function (message) {
                     vm.hangUp()
+                },
+                getDevices: async  function () {
+                    console.log('getting devices');
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.updateAllAudioDevices();
                 }
 
             }
