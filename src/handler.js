@@ -230,7 +230,7 @@ export function sendVoipNotification(requestBody) {
   note.alert = 'You have a new call';
   note.payload = {
     'aps': {'content-available': 1},
-    'callerName': 'dog', 'roomName': 'dog room',
+    'callerName': 'dog', 'roomName': 'My conference',
     'token': tokenOnlyGenerator(),
   };
   note.topic = 'link.jumpapp.psa.stg.voip';
