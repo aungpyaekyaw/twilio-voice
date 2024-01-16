@@ -7,7 +7,7 @@ import {holdParticipant} from './handler.js';
 
 const client = twilioClient(config.accountSid, config.authToken);
 
-const availableConferences = ['My conference 2', 'My conference'];
+const availableConferences = ['My conference'];
 // @type {Array<{roomId: string, data: {type: string, action: string, from: string, to: string, conference: string}}>}
 const activeAdmins = [];
 const identityMap = new Map();
@@ -274,6 +274,12 @@ function clearTheRoom(adminId) {
   console.log('Room clear for ', adminId);
   const index = activeRooms.findIndex((r) => r.admin == adminId);
   if (index > -1) {
+    // delete identity mapping
+    identityMap.delete(`client:${adminId}`);
+    activeRooms[index].users.map((u)=>{
+      identityMap.delete(`client:${u.userId}`);
+    });
+    console.log('identity map', identityMap);
     activeRooms[index].status = 'available';
     activeRooms[index].users = [];
   }
