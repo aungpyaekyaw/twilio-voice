@@ -126,7 +126,7 @@
                     console.log("Requesting Access Token...");
                     console.log(vm)
                     try {
-                        const resp = await fetch('/token')
+                        const resp = await fetch('/token/mod')
                         const data = await resp.json();
                         console.log("Got a token.", data.token);
                         vm.token = data.token;

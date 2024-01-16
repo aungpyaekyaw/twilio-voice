@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 let identity;
 
 export function tokenGenerator(mod) {
-  identity = mod ? 'Moderator' : nameGenerator();
+  identity = mod ? 'Admin' : nameGenerator();
 
   const accessToken = new twilio.jwt.AccessToken(
       config.accountSid,
@@ -81,7 +81,7 @@ export function conferenceResponse(requestBody) {
   const twiml = new twilio.twiml.VoiceResponse();
 
   const dial = twiml.dial();
-  const MODERATOR = 'Moderator';
+  const MODERATOR = 'Admin';
   console.log(`requestBody: `, requestBody);
 
   const conference = requestBody.conference || 'My conference';
