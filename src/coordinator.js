@@ -3,7 +3,7 @@
 
 import config from '../config.js';
 import twilioClient from 'twilio';
-import {holdParticipant} from './handler.js';
+import {holdParticipant, tokenOnlyGenerator} from './handler.js';
 
 const client = twilioClient(config.accountSid, config.authToken);
 
@@ -308,7 +308,10 @@ export function receiveCallFromIOS(wss, res) {
         type: 'coordinator',
       },
     }, wss);
-    res.sendStatus(200);
+    res.set('Content-Type', 'application/json');
+    res.send({
+      token: tokenOnlyGenerator(),
+    });
   } else {
     res.sendStatus(400);
   }

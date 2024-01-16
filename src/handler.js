@@ -37,6 +37,25 @@ export function tokenGenerator(mod) {
   };
 };
 
+export function tokenOnlyGenerator() {
+  identity = nameGenerator();
+  const accessToken = new twilio.jwt.AccessToken(
+      config.accountSid,
+      config.apiKey,
+      config.apiSecret,
+  );
+  accessToken.identity = identity;
+
+  const grant = new twilio.jwt.AccessToken.VoiceGrant({
+    outgoingApplicationSid: config.twimlAppSid,
+    incomingAllow: true,
+  });
+  accessToken.addGrant(grant);
+
+  // Include identity and token in a JSON response
+  return accessToken.toJwt();
+}
+
 export function voiceResponse(requestBody) {
   const toNumberOrClientName = requestBody.To;
   const callerId = config.callerId;
@@ -212,6 +231,7 @@ export function sendVoipNotification(requestBody) {
   note.payload = {
     'aps': {'content-available': 1},
     'callerName': 'dog', 'roomName': 'dog room',
+    'token': tokenOnlyGenerator(),
   };
   note.topic = 'link.jumpapp.psa.stg.voip';
   note.priority = 10;

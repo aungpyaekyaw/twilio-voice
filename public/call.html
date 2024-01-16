@@ -209,6 +209,12 @@
                         console.log(e);
                     }
 
+                    this.wsConnection.onclose  = function (e){
+                        console.log('socket connection closed');
+                        vm.identity = null;
+                        vm.token = null;
+                    }
+
                    
                 },
                 wsSend: (message) => {

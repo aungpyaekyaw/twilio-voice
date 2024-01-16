@@ -98,7 +98,7 @@
             el: '#app',
             data: {
                 token: null,
-                identity: '',
+                identity: null,
                 device: null,
                 call: null,
                 speakerDevices: [],
@@ -257,6 +257,12 @@
                     this.wsConnection.onmessage = function (e) {
                         console.log(e);
                         vm.handleWSMessage(e);
+                    }
+
+                    this.wsConnection.onclose  = function (e){
+                        console.log('socket connection closed');
+                        vm.identity = null;
+                        vm.token = null;
                     }
 
                     this.wsConnection.onopen = function (e) {
