@@ -211,8 +211,8 @@ function addUserToConference(contact, conferenceName, label) {
 export function sendVoipNotification(requestBody) {
   const options = {
     token: {
-      key: `${__dirname}/AuthKey_NB4J46P3Q4.p8`,
-      keyId: 'NB4J46P3Q4',
+      key: `${__dirname}/AuthKey_J8FTJQ43KP.p8`,
+      keyId: 'J8FTJQ43KP',
       teamId: '657V37PLVJ',
     },
     production: false,
@@ -220,7 +220,7 @@ export function sendVoipNotification(requestBody) {
 
   const apnProvider = new apn.Provider({
     cert: `${__dirname}/voip_jumpstg.pem`,
-    key: `${__dirname}/AuthKey_NB4J46P3Q4.pem`,
+    key: `${__dirname}/AuthKey_J8FTJQ43KP.pem`,
     ...options,
   });
 
