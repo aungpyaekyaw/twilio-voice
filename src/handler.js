@@ -168,7 +168,7 @@ export function holdParticipant(requestBody) {
 
 
 export async function getMyCurrentConferenceInfo(requestBody) {
-  console.log(`returning current conference info`);
+  console.log(`returning current conference info.`);
   let list = [];
   let participants = [];
   list = await client.conferences.list({
