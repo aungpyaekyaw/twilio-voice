@@ -17,7 +17,7 @@ let identity;
 export function tokenGenerator(mod) {
   identity = mod ? 'Admin' : nameGenerator();
 
-  console.log(config.accountSid, config.apiKey, config.apiSecret, config.authToken);
+  console.log(`${config.accountSid} ${config.apiKey} ${config.apiSecret} ${config.twimlAppSid} ${config.authToken} `);
 
   const accessToken = new twilio.jwt.AccessToken(
       config.accountSid,
