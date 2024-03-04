@@ -219,8 +219,8 @@ export function sendVoipNotification(requestBody) {
   };
 
   const apnProvider = new apn.Provider({
-    cert: `${__dirname}/voip_jumpstg.pem`,
-    key: `${__dirname}/AuthKey_J8FTJQ43KP.pem`,
+    // cert: `${__dirname}/voip_jumpstg.pem`,
+    // key: `${__dirname}/AuthKey_J8FTJQ43KP.pem`,
     ...options,
   });
 
@@ -235,7 +235,8 @@ export function sendVoipNotification(requestBody) {
     'callerName': 'dog', 'roomName': 'My conference',
     'token': tokenOnlyGenerator(),
   };
-  note.topic = 'link.jumpapp.psa.stg.voip';
+  // note.topic = 'link.jumpapp.psa.stg.voip';
+  note.topic = 'link.jumpapp.psa.dev.voip'
   note.priority = 10;
   note.pushType = 'alert';
 
